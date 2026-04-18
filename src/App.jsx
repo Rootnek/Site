@@ -873,7 +873,7 @@ export default function App() {
                   name="note"
                   value={form.note}
                   onChange={handleChange}
-                  placeholder="Если у вас есть какие-то важные уточнения по поводу меню или другая важная информация, сообщите нам"
+                  placeholder="Пожалуйста, уточните свои предпочтения по алкоголю и другим напиткам, а также особенности меню"
                   className="min-h-[100px] w-full p-3 text-black"
                 />
               </div>
