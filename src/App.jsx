@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
@@ -32,7 +32,7 @@ function saveLocalWishes(wishes) {
   try {
     window.localStorage.setItem("wedding-wishes", JSON.stringify(wishes));
   } catch {
-    //
+    // ignore local storage errors
   }
 }
 
@@ -57,7 +57,6 @@ async function parseJsonSafely(response) {
 
 export default function WeddingInvitationLanding() {
   const canUseSupabase = isConfigured(SUPABASE_URL) && isConfigured(SUPABASE_KEY);
-
   const [form, setForm] = useState({ name: "", attendance: "", note: "" });
   const [openDay, setOpenDay] = useState(0);
   const [slide, setSlide] = useState(0);
@@ -67,6 +66,8 @@ export default function WeddingInvitationLanding() {
   const [loadingWishes, setLoadingWishes] = useState(false);
   const [submittingRsvp, setSubmittingRsvp] = useState(false);
   const [submittingWish, setSubmittingWish] = useState(false);
+  const [showFab, setShowFab] = useState(true);
+  const rsvpRef = useRef(null);
 
   const images = [
     "/images/photo1.jpg",
@@ -210,6 +211,21 @@ export default function WeddingInvitationLanding() {
     };
   }, [canUseSupabase]);
 
+  useEffect(() => {
+    const el = document.getElementById("rsvp");
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowFab(!entry.isIntersecting);
+      },
+      { threshold: 0.4 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -314,6 +330,7 @@ export default function WeddingInvitationLanding() {
       setWishName("");
     } catch (error) {
       console.error("Failed to save wish:", error);
+      console.warn("Saving locally because remote save failed");
       const nextWishes = [fallbackWish, ...wishes];
       setWishes(nextWishes);
       saveLocalWishes(nextWishes);
@@ -736,9 +753,7 @@ export default function WeddingInvitationLanding() {
                     className="w-full bg-white p-5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.06)] ring-1 ring-[#f2e5e6]"
                     type="button"
                   >
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400">
-                      {item.label}
-                    </p>
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400">{item.label}</p>
                     <h3
                       className="mt-2 uppercase"
                       style={{ ...fontStyles.heading, color: accent, fontSize: "clamp(18px, 5vw, 22px)" }}
@@ -830,8 +845,7 @@ export default function WeddingInvitationLanding() {
             </h2>
 
             <p className="mb-6 text-center text-sm text-neutral-500 leading-6">
-              Можете написать свое поздравление в любое удобное для вас время. Во время банкета
-              наш ведущий также даст вам время для этого
+              Можете написать свое поздравление в любое удобное для вас время. Во время банкета наш ведущий также даст вам время для этого
             </p>
 
             <input
@@ -862,9 +876,7 @@ export default function WeddingInvitationLanding() {
               {loadingWishes ? (
                 <p>Загрузка...</p>
               ) : wishes.length === 0 ? (
-                <p className="text-sm text-neutral-500">
-                  Здесь появятся пожелания гостей после праздника.
-                </p>
+                <p className="text-sm text-neutral-500">Здесь появятся пожелания гостей после праздника.</p>
               ) : (
                 wishes.map((wish, index) => (
                   <motion.div
@@ -901,16 +913,21 @@ export default function WeddingInvitationLanding() {
         </section>
       </div>
 
-      <motion.a
-        href="#rsvp"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-6 py-3 text-sm uppercase tracking-widest text-white shadow-lg"
-        style={{ backgroundColor: accent }}
-      >
-        Обратная связь
-      </motion.a>
+      <AnimatePresence>
+        {showFab && (
+          <motion.a
+            href="#rsvp"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: [0, -2, 0], scale: [1, 1.02, 1], boxShadow: ["0 10px 25px rgba(0,0,0,0.18)", "0 14px 30px rgba(0,0,0,0.22)", "0 10px 25px rgba(0,0,0,0.18)"] }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2 text-xs sm:text-sm uppercase tracking-wide text-white shadow-lg whitespace-nowrap"
+            style={{ backgroundColor: accent }}
+          >
+            Обратная связь
+          </motion.a>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
