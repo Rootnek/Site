@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
@@ -32,7 +32,7 @@ function saveLocalWishes(wishes) {
   try {
     window.localStorage.setItem("wedding-wishes", JSON.stringify(wishes));
   } catch {
-    // ignore local storage errors
+    // ignore localStorage errors
   }
 }
 
@@ -45,7 +45,6 @@ function buildSupabaseRestUrl(path) {
 
 async function parseJsonSafely(response) {
   const raw = await response.text();
-
   if (!raw) return null;
 
   try {
@@ -55,8 +54,9 @@ async function parseJsonSafely(response) {
   }
 }
 
-export default function WeddingInvitationLanding() {
+export default function App() {
   const canUseSupabase = isConfigured(SUPABASE_URL) && isConfigured(SUPABASE_KEY);
+
   const [form, setForm] = useState({ name: "", attendance: "", note: "" });
   const [openDay, setOpenDay] = useState(0);
   const [slide, setSlide] = useState(0);
@@ -66,8 +66,7 @@ export default function WeddingInvitationLanding() {
   const [loadingWishes, setLoadingWishes] = useState(false);
   const [submittingRsvp, setSubmittingRsvp] = useState(false);
   const [submittingWish, setSubmittingWish] = useState(false);
-  const [showFab, setShowFab] = useState(true);
-  const rsvpRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const images = [
     "/images/photo1.jpg",
@@ -162,13 +161,16 @@ export default function WeddingInvitationLanding() {
   );
 
   useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
 
     const loadWishes = async () => {
       if (!canUseSupabase) {
-        if (!cancelled) {
-          setWishes(getLocalWishes());
-        }
+        if (!cancelled) setWishes(getLocalWishes());
         return;
       }
 
@@ -189,42 +191,20 @@ export default function WeddingInvitationLanding() {
           throw new Error(data?.message || data?.error || "Не удалось загрузить пожелания");
         }
 
-        if (!cancelled) {
-          setWishes(Array.isArray(data) ? data : []);
-        }
+        if (!cancelled) setWishes(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to load wishes:", error);
-        if (!cancelled) {
-          setWishes([]);
-        }
+        if (!cancelled) setWishes([]);
       } finally {
-        if (!cancelled) {
-          setLoadingWishes(false);
-        }
+        if (!cancelled) setLoadingWishes(false);
       }
     };
 
     loadWishes();
-
     return () => {
       cancelled = true;
     };
   }, [canUseSupabase]);
-
-  useEffect(() => {
-    const el = document.getElementById("rsvp");
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowFab(!entry.isIntersecting);
-      },
-      { threshold: 0.4 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -330,7 +310,6 @@ export default function WeddingInvitationLanding() {
       setWishName("");
     } catch (error) {
       console.error("Failed to save wish:", error);
-      console.warn("Saving locally because remote save failed");
       const nextWishes = [fallbackWish, ...wishes];
       setWishes(nextWishes);
       saveLocalWishes(nextWishes);
@@ -346,6 +325,21 @@ export default function WeddingInvitationLanding() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900" style={fontStyles.body}>
+      <div
+        className={`fixed inset-0 z-[100] flex items-center justify-center bg-white transition-opacity duration-[1800ms] ${isLoading ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+      >
+        <div className="text-center">
+          <p
+            style={{ fontFamily: '"Cormorant Garamond", serif' }}
+            className="text-3xl tracking-wide text-neutral-900"
+          >
+            Никита & Валерия
+          </p>
+          <div className="mx-auto mt-4 h-px w-24 animate-pulse bg-neutral-900" />
+        </div>
+      </div>
+
       <section
         className="relative flex min-h-screen flex-col justify-end overflow-hidden pb-10"
         style={{
@@ -364,7 +358,17 @@ export default function WeddingInvitationLanding() {
           style={{ backgroundColor: accentGlow }}
         />
 
-        <div className="relative flex h-[80vh] items-center justify-center overflow-visible">
+        <motion.div
+          initial={{ opacity: 0, y: 24, filter: "blur(16px)", scale: 1.03 }}
+          animate={{
+            opacity: isLoading ? 0 : 1,
+            y: isLoading ? 24 : 0,
+            filter: isLoading ? "blur(16px)" : "blur(0px)",
+            scale: isLoading ? 1.03 : 1,
+          }}
+          transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+          className="relative flex h-[80vh] items-center justify-center overflow-visible"
+        >
           <motion.div
             className="absolute inset-0 z-40"
             drag="x"
@@ -379,7 +383,6 @@ export default function WeddingInvitationLanding() {
           <AnimatePresence initial={false}>
             {images.map((img, index) => {
               const position = (index - slide + images.length) % images.length;
-
               if (position > 1 && position < images.length - 1) return null;
 
               let x = 0;
@@ -475,7 +478,7 @@ export default function WeddingInvitationLanding() {
               );
             })}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         <div className="mt-4 flex justify-center gap-4">
           <button
@@ -498,7 +501,16 @@ export default function WeddingInvitationLanding() {
           </button>
         </div>
 
-        <div className="mt-6 px-5">
+        <motion.div
+          initial={{ opacity: 0, y: 18, filter: "blur(10px)" }}
+          animate={{
+            opacity: isLoading ? 0 : 1,
+            y: isLoading ? 18 : 0,
+            filter: isLoading ? "blur(10px)" : "blur(0px)",
+          }}
+          transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
+          className="mt-6 px-5"
+        >
           <div className="mx-auto w-full max-w-2xl border border-white/70 bg-white/88 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.14)] backdrop-blur-md">
             <p
               className="uppercase tracking-[0.4em] text-neutral-500"
@@ -508,7 +520,7 @@ export default function WeddingInvitationLanding() {
             </p>
 
             <h1
-              className="mt-5 font-medium leading-[0.9] text-neutral-900 whitespace-nowrap"
+              className="mt-5 whitespace-nowrap font-medium leading-[0.9] text-neutral-900"
               style={{ ...fontStyles.heading, fontSize: "clamp(30px, 5.2vw, 58px)" }}
             >
               {content.couple}
@@ -521,7 +533,7 @@ export default function WeddingInvitationLanding() {
               {content.intro}
             </p>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       <section
@@ -753,7 +765,9 @@ export default function WeddingInvitationLanding() {
                     className="w-full bg-white p-5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.06)] ring-1 ring-[#f2e5e6]"
                     type="button"
                   >
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400">{item.label}</p>
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400">
+                      {item.label}
+                    </p>
                     <h3
                       className="mt-2 uppercase"
                       style={{ ...fontStyles.heading, color: accent, fontSize: "clamp(18px, 5vw, 22px)" }}
@@ -844,8 +858,9 @@ export default function WeddingInvitationLanding() {
               Ваши пожелания для нас
             </h2>
 
-            <p className="mb-6 text-center text-sm text-neutral-500 leading-6">
-              Можете написать свое поздравление в любое удобное для вас время. Во время банкета наш ведущий также даст вам время для этого
+            <p className="mb-6 text-center text-sm leading-6 text-neutral-500">
+              Можете написать свое поздравление в любое удобное для вас время. Во время банкета
+              наш ведущий также даст вам время для этого
             </p>
 
             <input
@@ -876,19 +891,21 @@ export default function WeddingInvitationLanding() {
               {loadingWishes ? (
                 <p>Загрузка...</p>
               ) : wishes.length === 0 ? (
-                <p className="text-sm text-neutral-500">Здесь появятся пожелания гостей после праздника.</p>
+                <p className="text-sm text-neutral-500">
+                  Здесь появятся пожелания гостей после праздника.
+                </p>
               ) : (
                 wishes.map((wish, index) => (
                   <motion.div
                     key={wish.id ?? index}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="bg-white p-3 shadow-[0_12px_30px_rgba(0,0,0,0.08)] rotate-[-1deg]"
+                    className="rotate-[-1deg] bg-white p-3 shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
                   >
                     <div className="min-h-[120px] border border-[#f1e7e7] bg-[#fffdfc] p-4">
                       <p className="text-sm leading-6 text-neutral-700">{wish.text}</p>
                     </div>
-                    <div className="pt-4 pb-2 text-center">
+                    <div className="pb-2 pt-4 text-center">
                       {wish.name ? (
                         <p
                           className="text-sm text-neutral-500"
@@ -913,21 +930,16 @@ export default function WeddingInvitationLanding() {
         </section>
       </div>
 
-      <AnimatePresence>
-        {showFab && (
-          <motion.a
-            href="#rsvp"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: [0, -2, 0], scale: [1, 1.02, 1], boxShadow: ["0 10px 25px rgba(0,0,0,0.18)", "0 14px 30px rgba(0,0,0,0.22)", "0 10px 25px rgba(0,0,0,0.18)"] }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2 text-xs sm:text-sm uppercase tracking-wide text-white shadow-lg whitespace-nowrap"
-            style={{ backgroundColor: accent }}
-          >
-            Обратная связь
-          </motion.a>
-        )}
-      </AnimatePresence>
+      <motion.a
+        href="#rsvp"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.8 }}
+        className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full px-5 py-2 text-xs uppercase tracking-wide text-white shadow-lg sm:text-sm"
+        style={{ backgroundColor: accent }}
+      >
+        Обратная связь
+      </motion.a>
     </div>
   );
 }
