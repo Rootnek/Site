@@ -67,6 +67,7 @@ export default function App() {
   const [submittingRsvp, setSubmittingRsvp] = useState(false);
   const [submittingWish, setSubmittingWish] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   const images = [
     "/images/photo1.jpg",
@@ -161,9 +162,44 @@ export default function App() {
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1200);
-    return () => clearTimeout(timer);
+    setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    let cancelled = false;
+    const minDelay = 900;
+    const start = Date.now();
+
+    const preload = (src) =>
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = src;
+      });
+
+    const loadHeroImages = async () => {
+      await Promise.all(images.slice(0, 3).map(preload));
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, minDelay - elapsed);
+
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
+
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    };
+
+    loadHeroImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mounted]);
 
   useEffect(() => {
     let cancelled = false;
@@ -325,20 +361,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900" style={fontStyles.body}>
-      <div
-        className={`fixed inset-0 z-[100] flex items-center justify-center bg-white transition-opacity duration-[1800ms] ${isLoading ? "opacity-100" : "pointer-events-none opacity-0"
-          }`}
-      >
-        <div className="text-center">
-          <p
-            style={{ fontFamily: '"Cormorant Garamond", serif' }}
-            className="text-3xl tracking-wide text-neutral-900"
-          >
-            Никита & Валерия
-          </p>
-          <div className="mx-auto mt-4 h-px w-24 animate-pulse bg-neutral-900" />
+      {mounted && (
+        <div
+          className={`fixed inset-0 z-[100] flex items-center justify-center bg-white transition-opacity duration-[1800ms] ${isLoading ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+        >
+          <div className="text-center">
+            <p
+              style={{ fontFamily: '"Cormorant Garamond", serif' }}
+              className="text-3xl tracking-wide text-neutral-900"
+            >
+              Никита & Валерия
+            </p>
+            <div className="mx-auto mt-4 h-px w-24 animate-pulse bg-neutral-900" />
+          </div>
         </div>
-      </div>
+      )}
 
       <section
         className="relative flex min-h-screen flex-col justify-end overflow-hidden pb-10"
