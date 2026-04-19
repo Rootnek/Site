@@ -151,7 +151,9 @@ export default function App() {
 
   const accent = "#c40018";
   const accentDark = "#8f0012";
-  const accentGlow = "rgba(196, 0, 24, 0.12)";
+  const accentGlow = "rgba(196, 0, 24, 0.08)";
+  const softPanel = "rgba(255,255,255,0.58)";
+  const softBorder = "rgba(255,255,255,0.46)";
 
   const fontStyles = useMemo(
     () => ({
@@ -360,7 +362,7 @@ export default function App() {
   const prev = () => setSlide((prev) => (prev - 1 + images.length) % images.length);
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900" style={fontStyles.body}>
+    <div className="min-h-screen text-neutral-900" style={{ ...fontStyles.body, backgroundImage: "linear-gradient(rgba(248,244,244,0.76), rgba(248,244,244,0.84)), url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=2200&q=90')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}>
       {mounted && (
         <div
           className={`fixed inset-0 z-[100] flex items-center justify-center bg-white transition-opacity duration-[1800ms] ${isLoading ? "opacity-100" : "pointer-events-none opacity-0"
@@ -380,12 +382,6 @@ export default function App() {
 
       <section
         className="relative flex min-h-screen flex-col justify-end overflow-hidden pb-10"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.9)), url('https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1400&q=80')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
       >
         <div
           className="pointer-events-none absolute -left-16 top-16 h-48 w-48 rounded-full blur-3xl"
@@ -549,7 +545,8 @@ export default function App() {
           transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
           className="mt-6 px-5"
         >
-          <div className="mx-auto w-full max-w-2xl border border-white/70 bg-white/88 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.14)] backdrop-blur-md">
+          <div className="mx-auto w-full max-w-2xl p-6 shadow-[0_22px_80px_rgba(84,58,58,0.10)] backdrop-blur-xl"
+            style={{ background: softPanel, border: `1px solid ${softBorder}` }}>
             <p
               className="uppercase tracking-[0.4em] text-neutral-500"
               style={{ fontSize: "clamp(10px, 2vw, 12px)" }}
@@ -576,16 +573,6 @@ export default function App() {
 
       <section
         className="relative overflow-hidden px-5 py-16"
-        style={{
-          backgroundImage: `
-            radial-gradient(ellipse at center, rgba(255,255,255,0) 55%, rgba(0,0,0,0.08) 100%),
-            linear-gradient(rgba(255,250,250,0.92), rgba(255,250,250,0.95)),
-            url('https://www.transparenttextures.com/patterns/cream-paper.png'),
-            url('https://www.transparenttextures.com/patterns/asfalt-light.png')
-          `,
-          backgroundBlendMode: "multiply",
-          backgroundSize: "auto",
-        }}
       >
         <div
           className="pointer-events-none absolute -left-12 top-10 h-40 w-40 rounded-full blur-3xl"
@@ -596,7 +583,8 @@ export default function App() {
           style={{ backgroundColor: accentGlow }}
         />
 
-        <div className="relative mx-auto max-w-md overflow-hidden border border-[#f1d9dc] bg-[#fffafa] p-6 shadow-[0_16px_50px_rgba(196,0,24,0.08)]">
+        <div className="relative mx-auto max-w-md overflow-hidden p-6 shadow-[0_22px_70px_rgba(98,66,66,0.08)] backdrop-blur-xl"
+          style={{ background: softPanel, border: `1px solid ${softBorder}` }}>
           <p
             className="text-center uppercase tracking-[0.38em]"
             style={{ color: accent, fontSize: "clamp(11px, 2.4vw, 12px)" }}
@@ -777,8 +765,6 @@ export default function App() {
 
       <div
         style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.94)), url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -800,7 +786,8 @@ export default function App() {
                   <button
                     key={index}
                     onClick={() => setOpenDay(isOpen ? -1 : index)}
-                    className="w-full bg-white p-5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.06)] ring-1 ring-[#f2e5e6]"
+                    className="w-full p-5 text-left shadow-[0_18px_48px_rgba(84,58,58,0.08)] backdrop-blur-xl"
+                    style={{ background: softPanel, border: `1px solid ${softBorder}` }}
                     type="button"
                   >
                     <p className="text-[10px] uppercase tracking-[0.28em] text-neutral-400">
@@ -841,8 +828,8 @@ export default function App() {
 
         <section id="rsvp" className="px-5 pb-24">
           <div
-            className="mx-auto max-w-md overflow-hidden border border-[#d94a5d] p-6 text-white shadow-[0_20px_50px_rgba(196,0,24,0.2)]"
-            style={{ background: `linear-gradient(180deg, ${accent} 0%, ${accentDark} 100%)` }}
+            className="mx-auto max-w-md overflow-hidden p-6 text-white shadow-[0_20px_60px_rgba(124,22,36,0.22)] backdrop-blur-xl"
+            style={{ background: `linear-gradient(180deg, rgba(196,0,24,0.88) 0%, rgba(143,0,18,0.88) 100%)`, border: '1px solid rgba(255,255,255,0.22)' }}
           >
             <h2
               style={{ ...fontStyles.heading, fontSize: "clamp(24px, 6vw, 32px)" }}
@@ -873,7 +860,7 @@ export default function App() {
                   name="note"
                   value={form.note}
                   onChange={handleChange}
-                  placeholder="Пожалуйста, уточните свои предпочтения по алкоголю и другим напиткам, а также особенности меню"
+                  placeholder="Если у вас есть какие-то важные уточнения по поводу меню или другая важная информация, сообщите нам"
                   className="min-h-[100px] w-full p-3 text-black"
                 />
               </div>
@@ -905,14 +892,14 @@ export default function App() {
               value={wishName}
               onChange={(event) => setWishName(event.target.value)}
               placeholder="Ваше имя"
-              className="mb-2 w-full border p-3"
+              className="mb-2 w-full border border-white/60 bg-white/68 p-3 backdrop-blur-md"
             />
 
             <textarea
               value={wishInput}
               onChange={(event) => setWishInput(event.target.value)}
               placeholder="Ваше пожелание для нас"
-              className="w-full border p-3"
+              className="w-full border border-white/60 bg-white/68 p-3 backdrop-blur-md"
             />
 
             <button
@@ -938,7 +925,8 @@ export default function App() {
                     key={wish.id ?? index}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="rotate-[-1deg] bg-white p-3 shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
+                    className="rotate-[-1deg] p-3 shadow-[0_16px_34px_rgba(84,58,58,0.10)] backdrop-blur-md"
+                    style={{ background: 'rgba(255,255,255,0.72)', border: '1px solid rgba(255,255,255,0.52)' }}
                   >
                     <div className="min-h-[120px] border border-[#f1e7e7] bg-[#fffdfc] p-4">
                       <p className="text-sm leading-6 text-neutral-700">{wish.text}</p>
@@ -973,8 +961,8 @@ export default function App() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.8 }}
-        className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full px-5 py-2 text-xs uppercase tracking-wide text-white shadow-lg sm:text-sm"
-        style={{ backgroundColor: accent }}
+        className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-full px-5 py-2 text-xs uppercase tracking-[0.18em] text-white shadow-[0_14px_32px_rgba(124,22,36,0.25)] backdrop-blur-md sm:text-sm"
+        style={{ background: 'linear-gradient(180deg, rgba(196,0,24,0.92) 0%, rgba(143,0,18,0.92) 100%)', border: '1px solid rgba(255,255,255,0.22)' }}
       >
         Обратная связь
       </motion.a>
